@@ -1,0 +1,26 @@
+def non_dominated_sort(population):
+    front0 = []
+    for p in population:
+        for q in population:
+            if dominates(p, q):    # If p dominates q
+                p.domination_set.append(q)    # Add q to the set of solutions p dominates
+            elif dominates(q, p):    # If q dominates p
+                p.domination_count += 1    # Increment the domination counter of p
+        if p.domination_count == 0:    # If count == 0, the solution p belongs to the first front
+            p.rank = 0
+            front0.append(p)
+
+    fronts = [front0]
+    index = 0
+    while len(fronts[index]) != 0:
+        next_front = set()
+        for p in fronts[index]:
+            for q in p.domination_set:
+                q.domination_count -= 1
+                if q.domination_count == 0:
+                    q.rank = index + 1
+                    next_front.add(q)
+        index += 1
+        fronts.append(next_front)
+
+    return fronts
