@@ -24,3 +24,12 @@ def non_dominated_sort(population):
         fronts.append(next_front)
 
     return fronts
+
+def dominates(p, q):
+    if p.fitness1 >= q.fitness1:
+        return False
+    if p.fitness2 >= q.fitness2:
+        return False
+    if p.fitness3 >= q.fitness3:
+        return False
+    return True
