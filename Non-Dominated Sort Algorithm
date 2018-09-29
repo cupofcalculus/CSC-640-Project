@@ -27,10 +27,7 @@ def non_dominated_sort(population):
 
 def dominates(p, q):
     # Better solutions have a lower fitness value
-    if p.fitness1 >= q.fitness1:
+    if p.fitness1 >= q.fitness1 or p.fitness2 >= q.fitness2 or p.fitness3 >= q.fitness3:
         return False
-    if p.fitness2 >= q.fitness2:
-        return False
-    if p.fitness3 >= q.fitness3:
-        return False
-    return True
+    else:
+        return True
