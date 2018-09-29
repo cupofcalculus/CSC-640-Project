@@ -26,6 +26,7 @@ def non_dominated_sort(population):
     return fronts
 
 def dominates(p, q):
+    # Better solutions have a lower fitness value
     if p.fitness1 >= q.fitness1:
         return False
     if p.fitness2 >= q.fitness2:
