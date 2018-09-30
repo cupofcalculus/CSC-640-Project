@@ -74,6 +74,32 @@ def makeRectObj(w, h, x1, y1, c):
 	return { "width": w, "height": h, "color": c,
 		"x1": x1, "y1": y1, 
 		"x2": x1+w, "y2": y1+h}  # Return a dictionary object
+
+# POORLY NAMED PERMITITER FITNESS FUNCTION IS HERE
+def fitness1(individual):
+	"""
+	@param individual: a single solution taken out of population
+	@return: the perimeter of a rectangle created by taking the maximum and minimum x,y coordinates of
+	all pieces within the solution. This will server as a fitness function for the genetic algorithm, which
+	will attempt to minimize this value. 
+	"""
+	max_x = -1000000000000
+	min_x = 1000000000000
+	max_y = -1000000000000
+	min_y = 1000000000000
+
+	for i in range(len(individual)):
+		if individual[i]["x1"] < min_x:
+			min_x = individual[i]["x1"]
+		if individual[i]["x2"] > max_x:
+			max_x = individual[i]["x2"]
+		if individual[i]["y1"] < min_y:
+			min_y = individual[i]["y1"]
+		if individual[i]["y2"] > max_y:
+			max_y = individual[i]["y2"] 
+
+	return 2*(max_x - min_x) + 2*(max_y - min_y)  
+
 	
 
 
@@ -171,11 +197,15 @@ Remember:
 	A POPULATION is a set of POPULATION_SIZE individuals.
 	An INDIVIDUAL is a set of PIECE_COUNT pieces.
 '''
+print("population", population)
 for looper in range(NUMBER_OF_GENERATIONS):
 
 
 	# EVALUATE ALL INDIVIDUALS 
-	
+	# TODO: add evaluation for total perimiter
+
+
+	# TODO: add evaluation for overlap
 	
 	# SELECT INDIVIDUALS FOR REPRODUCTION IN THE NEXT GENERATION
 	
