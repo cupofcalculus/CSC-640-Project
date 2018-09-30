@@ -97,7 +97,27 @@ def makeRectObj(w, h, x1, y1, c):
         "x1": x1, "y1": y1,
         "x2": x1+w, "y2": y1+h}  # Return a dictionary object
 
+# CROSSOVER HELPER FUNCTION DEFINITION
+def crossover(population):
+    offsprings = []
+    for i in range(global POPULATION_SIZE):
+	selection1 = random.randint(0, POPULATION_SIZE)
+	selection2 = random.randint(0, POPULATION_SIZE)
+	cut = randint(0, NUMBER_OF_PIECES)
 
+	new_individual = {"Pieces": [0 for j in range(global NUMBER_OF_PIECES)],
+			"Fitness1": None,
+			"Fitness2": None }
+
+	for i in range(cut):
+	    new_individual["Pieces"][i] = population[selection1]["Pieces"][i]
+
+	for i in range(cut, NUMBER_OF_PIECES):
+	    new_individual["Pieces"][i] = population[selection2]["Pieces"][i]
+
+	offsprings.append(new_individual)
+
+    return offsprings
 
 # Use tkinter to display stock and pieces
 from tkinter import *
@@ -311,36 +331,17 @@ Remember:
 '''
 for looper in range(NUMBER_OF_GENERATIONS):
 
-
     # CROSSOVER OPERATION FOR INDIVIDUALS
+    offsprings = crossover(population)
 
 
     # MUTATION OPERATION FOR INDIVIDUALS
-    # In general, select with some randomness "several" individuals upon which
-    # to perform mutation of "some" (one or more) characteristics.
-    # TBD This demo is hardcoded to change only the first characteristic of the first individual.
     mutated_copies = create_mutated_copies(population, looper)
-
-
-    # mutating_individual = population[0] # mutating_individual is a list of dictionary
-    # print()
-    # print("mutating indiv is ", mutating_individual)
-    # print()
-    # mutating_characteristic = mutating_individual[0]
-    # print(" mutating_characteristic is ", mutating_characteristic)
-    # print()
-    #
-    # prev_value = mutating_characteristic.get("x1")
-    # new_value = prev_value + 5  # Mutate by incrementing
-    # mutating_characteristic["x1"] = new_value
-    # prev_value = mutating_characteristic.get("x2")
-    # new_value = prev_value + 5  # Mutate by incrementing
-    # mutating_characteristic["x2"] = new_value
 
 
     # EVALUATE ALL INDIVIDUALS
     # Combine the original population with crossover and mutated individuals
-    total_population = population + mutated_copies
+    total_population = population + offsprings + mutated_copies
     # Calculate fitness for all individuals that havesn't been calculated
     for i in range(len(total_population)):
         if total_population[i]["Fitness1"] == None:
@@ -375,7 +376,6 @@ for looper in range(NUMBER_OF_GENERATIONS):
 
     canvas.update()
     time.sleep(1) # HARDCODED TIME -- pause briefly between generations
-
 
 
 
