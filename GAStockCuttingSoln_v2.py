@@ -73,8 +73,28 @@ def makeRectObj(w, h, x1, y1, c):
 	return { "width": w, "height": h, "color": c,
 		"x1": x1, "y1": y1, 
 		"x2": x1+w, "y2": y1+h}  # Return a dictionary object
-	
 
+# CROSSOVER HELPER FUNCTION DEFINITION
+def crossover(population):
+    offsprings = []
+    for i in range(global POPULATION_SIZE):
+	selection1 = random.randint(0, POPULATION_SIZE)
+	selection2 = random.randint(0, POPULATION_SIZE)
+	cut = randint(0, NUMBER_OF_PIECES)
+
+	new_individual = {"Pieces": [0 for j in range(global NUMBER_OF_PIECES)],
+			"Fitness1": None,
+			"Fitness2": None }
+
+	for i in range(cut):
+	    new_individual["Pieces"][i] = population[selection1]["Pieces"][i]
+
+	for i in range(cut, NUMBER_OF_PIECES):
+	    new_individual["Pieces"][i] = population[selection2]["Pieces"][i]
+
+	offsprings.append(new_individual)
+
+    return offsprings
 
 # Use tkinter to display stock and pieces
 from tkinter import *      
@@ -180,7 +200,8 @@ for looper in range(NUMBER_OF_GENERATIONS):
 	
 	
 	# CROSSOVER OPERATION FOR INDIVIDUALS
-	
+
+	offsprings = crossover(population)
 
 	# MUTATION OPERATION FOR INDIVIDUALS
 	# In general, select with some randomness "several" individuals upon which
