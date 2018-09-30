@@ -61,6 +61,29 @@ class Piece:
     # to return other individual values or a set of several
     # values within a tuple or list.
 
+def fitness1(individual):
+	'''
+	@param individual: a single solution out of the population
+	@return: the perimeter of the rectangle
+	'''
+    # Initialize
+	max_x = individual[0]["x2"]
+	min_x = individual[0]["x1"]
+	max_y = individual[0]["y2"]
+	min_y = individual[0]["y1"]
+    # Check others
+	for i in range(len(individual)):
+		if individual[i]["x1"] < min_x:
+			min_x = individual[i]["x1"]
+		if individual[i]["x2"] > max_x:
+			max_x = individual[i]["x2"]
+		if individual[i]["y1"] < min_y:
+			min_y = individual[i]["y1"]
+		if individual[i]["y2"] > max_y:
+			max_y = individual[i]["y2"]
+    # Set Fitness1
+	return 2*(max_x - min_x) + 2*(max_y - min_y)
+
 
 '''
 Create a Piece object in a dictionary data structure, using the parameters
@@ -218,10 +241,12 @@ def create_mutated_copies(original_population, generation_num):
         # Copy a random individual
         copy_indx = random.randint(0, (len(original_population) - 1))
         copy = copy_individual(original_population[copy_indx])
+        mutated = False
         # Swapping Mutation
         max_swaps = round(len(original_population) * mutation_rate)
         num_swaps = random.randint(0, max_swaps)
         for j in range(num_swaps):
+            mutated = True
             # Grab random indexes to swap positions
             indx1 = random.randint(0, len(copy["Pieces"]) - 1)
             indx2 = random.randint(0, len(copy["Pieces"]) - 1)
@@ -249,6 +274,7 @@ def create_mutated_copies(original_population, generation_num):
         for indx in range(len(copy["Pieces"])):
             randNum = random.uniform(0.0, 1.0)
             if randNum < chance_of_move:
+                mutated = True
                 # Grab random individual
                 x_move = random.uniform(-max_move_dist_x, max_move_dist_x)
                 y_move = random.uniform(-max_move_dist_y, max_move_dist_y)
@@ -264,10 +290,16 @@ def create_mutated_copies(original_population, generation_num):
         for indx in range(len(copy["Pieces"])):
             randNum = random.uniform(0.0, 1.0)
             if randNum < chance_of_rotation and in_bounds_rotate(copy["Pieces"][indx]):
+                mutated = True
                 h = copy["Piece"][indx]["height"]
                 w = copy["Piece"][indx]["width"]
                 copy["Piece"][indx]["height"] = w
                 copy["Piece"][indx]["width"] = h
+        # If the copy was mutated add to list
+        if mutated:
+            mutated_copies.append(copy)
+    # Return the mutated individuals
+    return mutated_copies
 
 
 '''
@@ -307,6 +339,16 @@ for looper in range(NUMBER_OF_GENERATIONS):
 
 
     # EVALUATE ALL INDIVIDUALS
+    # Combine the original population with crossover and mutated individuals
+    total_population = population + mutated_copies
+    # Calculate fitness for all individuals that havesn't been calculated
+    for i in range(len(total_population)):
+        if total_population[i]["Fitness1"] == None:
+        	total_population[i]["Fitness1"] = fitness1(total_population[i]["Pieces"])
+        	print(total_population[i]["Fitness1"])
+        # if total_population[i]["Fitness2"] == None:
+        #     total_population[i]["Fitness2"] = fitness2(total_population[i]["Pieces"])
+        # 	print(total_population[i]["Fitness2"])
 
 
     # SELECT INDIVIDUALS FOR REPRODUCTION IN THE NEXT GENERATION
