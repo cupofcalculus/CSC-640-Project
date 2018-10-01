@@ -22,6 +22,7 @@ https://tkdocs.com/
 import time  # for pause during graphic display
 import random
 import sys
+import json
 #import tkFont  # http://infohost.nmt.edu/tcc/help/pubs/tkinter/web/fonts.html
 # random.seed(0)  # Initialize internal state of the random number generator.
 from datetime import datetime
@@ -123,6 +124,53 @@ def crossover(population):
         offsprings.append(new_individual)
 
     return offsprings
+
+# SELECTION HELPER FUNCTION DEFINITION
+def non_dominated_sort(population):
+    front0 = []
+    # add necessary attributes
+    for p in population:
+        p["domination_set"] = []
+        p["domination_count"] = 0
+        p["rank"] = None 
+    for p in population:
+        for q in population:
+            if dominates(p, q):    # If p dominates q
+                p["domination_set"].append(q)    # Add q to the set of solutions p dominates
+            elif dominates(q, p):    # If q dominates p
+                p["domination_count"] += 1    # Increment the domination counter of p
+        if p["domination_count"] == 0:    # If count == 0, the solution p belongs to the first front
+            p["rank"] = 0
+            front0.append(p)
+
+    fronts = [front0]
+    index = 0
+    while len(fronts[index]) != 0:
+        next_front = []
+        for p in fronts[index]:
+            for q in p["domination_set"]:
+                q["domination_count"] -= 1
+                if q["domination_count"] == 0:
+                    q["rank"] = index + 1
+                    # check for uniqueness
+                    unique = True
+                    for i in next_front:
+                        if json.dumps(i) == json.dumps(q):
+                            unique = False
+                    if unique:
+                        next_front.append(q)
+        index += 1
+        fronts.append(next_front)
+
+    return fronts
+
+# HELPER FUNCTION FOR SELECTION
+def dominates(p, q):
+    # Better solutions have a lower fitness value
+    if p["Fitness1"] >= q["Fitness1"] or p["Fitness2"] >= q["Fitness2"]:
+        return False
+    else:
+        return True
 
 # Use tkinter to display stock and pieces
 from tkinter import *
@@ -351,15 +399,26 @@ for looper in range(NUMBER_OF_GENERATIONS):
     for i in range(len(total_population)):
         if total_population[i]["Fitness1"] == None:
         	total_population[i]["Fitness1"] = fitness1(total_population[i]["Pieces"])
-        	print(total_population[i]["Fitness1"])
+        	#print(total_population[i]["Fitness1"])
         # if total_population[i]["Fitness2"] == None:
         #     total_population[i]["Fitness2"] = fitness2(total_population[i]["Pieces"])
         # 	print(total_population[i]["Fitness2"])
-
+    # TODO: implement fitness2
+    for i in range(len(total_population)):
+        if total_population[i]["Fitness2"] == None:
+            total_population[i]["Fitness2"] = 0
 
     # SELECT INDIVIDUALS FOR REPRODUCTION IN THE NEXT GENERATION
-
-
+    total_population = non_dominated_sort(total_population)
+    new_population = []
+    for i in range(len(total_population)):
+        for j in range(len(total_population[i])):
+            new_population.append(total_population[i][j])
+            if len(new_population) == POPULATION_SIZE:
+                break
+        if len(new_population) == POPULATION_SIZE:
+            break
+    population = new_population
 
     # Display all pieces in their new position.
     # In general, display the fittest individual of this generation.
