@@ -23,7 +23,9 @@ import time  # for pause during graphic display
 import random
 import sys
 #import tkFont  # http://infohost.nmt.edu/tcc/help/pubs/tkinter/web/fonts.html
-random.seed(0)  # Initialize internal state of the random number generator.
+# random.seed(0)  # Initialize internal state of the random number generator.
+from datetime import datetime
+random.seed(datetime.now())
 
 NUMBER_OF_PIECES = 6  # HARDCODED
 STOCK_WIDTH = 800 # HARDCODED  Width of stock
@@ -62,27 +64,27 @@ class Piece:
     # values within a tuple or list.
 
 def fitness1(individual):
-    '''
-    @param individual: a single solution out of the population
-    @return: the perimeter of the rectangle
-    '''
+	'''
+	@param individual: a single solution out of the population
+	@return: the perimeter of the rectangle
+	'''
     # Initialize
-    max_x = individual[0]["x2"]
-    min_x = individual[0]["x1"]
-    max_y = individual[0]["y2"]
-    min_y = individual[0]["y1"]
+	max_x = individual[0]["x2"]
+	min_x = individual[0]["x1"]
+	max_y = individual[0]["y2"]
+	min_y = individual[0]["y1"]
     # Check others
-    for i in range(len(individual)):
-        if individual[i]["x1"] < min_x:
-            min_x = individual[i]["x1"]
-        if individual[i]["x2"] > max_x:
-            max_x = individual[i]["x2"]
-        if individual[i]["y1"] < min_y:
-            min_y = individual[i]["y1"]
-        if individual[i]["y2"] > max_y:
-            max_y = individual[i]["y2"]
+	for i in range(len(individual)):
+		if individual[i]["x1"] < min_x:
+			min_x = individual[i]["x1"]
+		if individual[i]["x2"] > max_x:
+			max_x = individual[i]["x2"]
+		if individual[i]["y1"] < min_y:
+			min_y = individual[i]["y1"]
+		if individual[i]["y2"] > max_y:
+			max_y = individual[i]["y2"]
     # Set Fitness1
-    return 2*(max_x - min_x) + 2*(max_y - min_y)
+	return 2*(max_x - min_x) + 2*(max_y - min_y)
 
 
 '''
@@ -99,25 +101,24 @@ def makeRectObj(w, h, x1, y1, c):
 
 # CROSSOVER HELPER FUNCTION DEFINITION
 def crossover(population):
-    global POPULATION_SIZE
-    global NUMBER_OF_PIECES
     offsprings = []
     for i in range(POPULATION_SIZE):
-        selection1 = random.randint(0, POPULATION_SIZE)
-        selection2 = random.randint(0, POPULATION_SIZE)
+        selection1 = random.randint(0, POPULATION_SIZE - 1)
+        selection2 = random.randint(0, POPULATION_SIZE - 1)
         cut = random.randint(0, NUMBER_OF_PIECES)
 
         new_individual = {"Pieces": [0 for j in range(NUMBER_OF_PIECES)],
-                "Fitness1": None,
-                "Fitness2": None }
+        		"Fitness1": None,
+        		"Fitness2": None }
 
         for i in range(cut):
             new_individual["Pieces"][i] = population[selection1]["Pieces"][i]
 
         for i in range(cut, NUMBER_OF_PIECES):
-            print(i)
+            print(new_individual["Pieces"][i])
+            print(population[selection2])
+            print(population[selection2]["Pieces"][i])
             new_individual["Pieces"][i] = population[selection2]["Pieces"][i]
-
 
         offsprings.append(new_individual)
 
@@ -349,8 +350,8 @@ for looper in range(NUMBER_OF_GENERATIONS):
     # Calculate fitness for all individuals that havesn't been calculated
     for i in range(len(total_population)):
         if total_population[i]["Fitness1"] == None:
-            total_population[i]["Fitness1"] = fitness1(total_population[i]["Pieces"])
-            print(total_population[i]["Fitness1"])
+        	total_population[i]["Fitness1"] = fitness1(total_population[i]["Pieces"])
+        	print(total_population[i]["Fitness1"])
         # if total_population[i]["Fitness2"] == None:
         #     total_population[i]["Fitness2"] = fitness2(total_population[i]["Pieces"])
         # 	print(total_population[i]["Fitness2"])
