@@ -327,6 +327,86 @@ def create_mutated_copies(original_population, generation_num):
     return mutated_copies
 
 
+
+# Second fitness function which determines overlap sum of an individual by calculating
+# the overlap area of all shapes.
+def fitness2(individual):
+    
+    #   # Individual has 6 shapes each.
+    #   # Overall fitness returned for an individual
+
+    indiv_set = {}
+    
+    # Check if shape lengths overlap.
+    for shape1 in individual:
+        shape1_color = shape1['color']
+
+        # Shape1 Left & Right X point values  
+        lengthS1 = [shape1['x1'], shape1['x2']]
+    
+        for shape2 in individual:
+            shape2_color = shape2['color']
+
+            if shape1_color != shape2_color:
+            
+                shape_pair = tuple(sorted((shape1_color, shape2_color)))
+                
+                if shape_pair not in indiv_set:
+
+                    # Shape2 Left & Right X point values  
+                    lengthS2 = [shape2['x1'], shape2['x2']]
+
+                    if (lengthS1[0] <= lengthS2[1]<= lengthS1[1]) or (lengthS1[0] <= lengthS2[0]<= lengthS1[1]):
+
+                        # Shape1 Top & Bottom y point values 
+                        heightS1 = [shape1['y1'], shape1['y2']]
+                        # Shape2 Top & Bottom Y point values 
+                        heightS2 = [shape2['y1'], shape2['y2']]
+
+                        if (heightS1[0] <= heightS2[1]<= heightS1[1]) or (heightS1[0] <= heightS2[0]<= heightS1[1]):
+                            
+                            #If two shapes overlap, continue
+                            overlap_area = 0
+
+
+                            # If second shape is located higher & Right than initial shape.
+                            # If second shape is Right & exactly above.
+                            if (heightS2[0] <= heightS1[0] and lengthS2[0] > lengthS1[0]):
+                                length_overlap = lengthS1[1] - lengthS2[0]
+                                height_overlap = heightS2[1] - heightS1[0]
+                                overlap_area = height_overlap * length_overlap
+
+                            # If second shape is located higher & Left than initial shape.
+                            # If second shape is just higher & above 
+                            # If second shape is just Left & above
+                            elif (heightS2[0] <= heightS1[0] and lengthS2[0] <= lengthS1[0]):
+                                length_overlap = lengthS2[1] - lengthS1[0]
+                                height_overlap = heightS2[1] - heightS1[0]
+                                overlap_area = height_overlap * length_overlap
+            
+                            # If the second shape is located Lower & Left than initial shape.
+                            # If second shape is just lower & above
+                            elif (heightS2[0] > heightS1[0] and lengthS2[0] <= lengthS1[0]):
+                                length_overlap = lengthS2[1] - lengthS1[0]
+                                height_overlap = heightS1[1] - heightS2[0]
+                                overlap_area = height_overlap * length_overlap
+                
+                            # If the second shape is located Lower & Right than initial shape. 
+                            elif (heightS2[0] > heightS1[0] and lengthS2[0] > lengthS1[0]):
+                                length_overlap = lengthS1[1] - lengthS2[0]
+                                height_overlap = heightS1[1] - heightS2[0]
+                                overlap_area = height_overlap * length_overlap
+                            
+                            # Add (shape pair) & its area to dictionary
+                            indiv_set[shape_pair] = overlap_area
+                            
+    total_overlap = 0
+    for key in indiv_set:
+        overlap = indiv_set[key]
+        total_overlap += overlap
+    print (total_overlap)
+    return total_overlap
+
 '''
 This is the main GA loop, performing the evolutionary sequence of
 operations: Evaluation, Selection, Crossover, Mutation.
