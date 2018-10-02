@@ -26,6 +26,7 @@ import json
 #import tkFont  # http://infohost.nmt.edu/tcc/help/pubs/tkinter/web/fonts.html
 # random.seed(0)  # Initialize internal state of the random number generator.
 from datetime import datetime
+from operator import itemgetter
 random.seed(datetime.now())
 
 NUMBER_OF_PIECES = 6  # HARDCODED
@@ -264,6 +265,15 @@ def dominates(p, q):
     else:
         return True
 
+def sort_population(population):
+    sorted_list = sorted(population, key=itemgetter("Fitness2"))
+    for i in range(len(sorted_list)):
+        for j in range(len(sorted_list)):
+            if sorted_list[i]["Fitness2"] == sorted_list[j]["Fitness2"] and sorted_list[i]["Fitness1"] > sorted_list[j]["Fitness1"]:
+                sorted_list[i],sorted_list[j] = sorted_list[j], sorted_list[i]
+
+
+    return sorted_list
 
 # Use tkinter to display stock and pieces
 from tkinter import *
@@ -529,18 +539,28 @@ for looper in range(NUMBER_OF_GENERATIONS):
 
 
     # SELECT INDIVIDUALS FOR REPRODUCTION IN THE NEXT GENERATION
-    sorted_population = non_dominated_sort(total_population)
+    sorted_population = sort_population(total_population)
     new_population = []
-    for i in range(len(sorted_population)):
-        for j in range(len(sorted_population[i])):
-            new_population.append(full_copy_individual(sorted_population[i][j]))
-            if len(new_population) == POPULATION_SIZE:
-                break
-        if len(new_population) == POPULATION_SIZE:
-            break
+    # for i in range(len(sorted_population)):
+    #     for j in range(len(sorted_population[i])):
+    #         new_population.append(full_copy_individual(sorted_population[i][j]))
+    #         if len(new_population) == POPULATION_SIZE:
+    #             break
+    #     if len(new_population) == POPULATION_SIZE:
+    #         break
+    for i in range(POPULATION_SIZE):
+        new_population.append(sorted_population[i])
+
     population = new_population
+    for i in population:
+        print("Fitness2:", i["Fitness2"])
+        print("Fitness1:", i["Fitness1"])
+        print()
 
     # Print highest fitness
+    print("Total Population:", str(len(total_population)))
+    print("Sorted Population:", str(len(sorted_population)))
+    print("New Population:", len(new_population))
     print("Generation " + str(looper))
     print("Fitness 1: " + str(population[0]["Fitness1"]))
     print("Fitness 2: " + str(population[0]["Fitness2"]))
