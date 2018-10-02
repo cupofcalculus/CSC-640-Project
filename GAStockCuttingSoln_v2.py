@@ -22,6 +22,7 @@ https://tkdocs.com/
 import time  # for pause during graphic display
 import random
 import sys
+import json
 #import tkFont  # http://infohost.nmt.edu/tcc/help/pubs/tkinter/web/fonts.html
 # random.seed(0)  # Initialize internal state of the random number generator.
 from datetime import datetime
@@ -86,6 +87,85 @@ def fitness1(individual):
     # Set Fitness1
 	return 2*(max_x - min_x) + 2*(max_y - min_y)
 
+# Second fitness function which determines overlap sum of an individual by calculating
+# the overlap area of all shapes.
+def fitness2(individual):
+
+    #   # Individual has 6 shapes each.
+    #   # Overall fitness returned for an individual
+
+    indiv_set = {}
+
+    # Check if shape lengths overlap.
+    for shape1 in individual:
+        shape1_color = shape1['color']
+
+        # Shape1 Left & Right X point values
+        lengthS1 = [shape1['x1'], shape1['x2']]
+
+        for shape2 in individual:
+            shape2_color = shape2['color']
+
+            if shape1_color != shape2_color:
+
+                shape_pair = tuple(sorted((shape1_color, shape2_color)))
+
+                if shape_pair not in indiv_set:
+
+                    # Shape2 Left & Right X point values
+                    lengthS2 = [shape2['x1'], shape2['x2']]
+
+                    if (lengthS1[0] <= lengthS2[1]<= lengthS1[1]) or (lengthS1[0] <= lengthS2[0]<= lengthS1[1]):
+
+                        # Shape1 Top & Bottom y point values
+                        heightS1 = [shape1['y1'], shape1['y2']]
+                        # Shape2 Top & Bottom Y point values
+                        heightS2 = [shape2['y1'], shape2['y2']]
+
+                        if (heightS1[0] <= heightS2[1]<= heightS1[1]) or (heightS1[0] <= heightS2[0]<= heightS1[1]):
+
+                            #If two shapes overlap, continue
+                            overlap_area = 0
+
+
+                            # If second shape is located higher & Right than initial shape.
+                            # If second shape is Right & exactly above.
+                            if (heightS2[0] <= heightS1[0] and lengthS2[0] > lengthS1[0]):
+                                length_overlap = lengthS1[1] - lengthS2[0]
+                                height_overlap = heightS2[1] - heightS1[0]
+                                overlap_area = height_overlap * length_overlap
+
+                            # If second shape is located higher & Left than initial shape.
+                            # If second shape is just higher & above
+                            # If second shape is just Left & above
+                            elif (heightS2[0] <= heightS1[0] and lengthS2[0] <= lengthS1[0]):
+                                length_overlap = lengthS2[1] - lengthS1[0]
+                                height_overlap = heightS2[1] - heightS1[0]
+                                overlap_area = height_overlap * length_overlap
+
+                            # If the second shape is located Lower & Left than initial shape.
+                            # If second shape is just lower & above
+                            elif (heightS2[0] > heightS1[0] and lengthS2[0] <= lengthS1[0]):
+                                length_overlap = lengthS2[1] - lengthS1[0]
+                                height_overlap = heightS1[1] - heightS2[0]
+                                overlap_area = height_overlap * length_overlap
+
+                            # If the second shape is located Lower & Right than initial shape.
+                            elif (heightS2[0] > heightS1[0] and lengthS2[0] > lengthS1[0]):
+                                length_overlap = lengthS1[1] - lengthS2[0]
+                                height_overlap = heightS1[1] - heightS2[0]
+                                overlap_area = height_overlap * length_overlap
+
+                            # Add (shape pair) & its area to dictionary
+                            indiv_set[shape_pair] = overlap_area
+
+    total_overlap = 0
+    for key in indiv_set:
+        overlap = indiv_set[key]
+        total_overlap += overlap
+    print (total_overlap)
+    return total_overlap
+
 
 '''
 Create a Piece object in a dictionary data structure, using the parameters
@@ -123,6 +203,55 @@ def crossover(population):
         offsprings.append(new_individual)
 
     return offsprings
+
+
+# SELECTION HELPER FUNCTION DEFINITION
+def non_dominated_sort(population):
+    front0 = []
+    # add necessary attributes
+    for p in population:
+        p["domination_set"] = []
+        p["domination_count"] = 0
+        p["rank"] = None
+    for p in population:
+        for q in population:
+            if dominates(p, q):    # If p dominates q
+                p["domination_set"].append(q)    # Add q to the set of solutions p dominates
+            elif dominates(q, p):    # If q dominates p
+                p["domination_count"] += 1    # Increment the domination counter of p
+        if p["domination_count"] == 0:    # If count == 0, the solution p belongs to the first front
+            p["rank"] = 0
+            front0.append(p)
+
+    fronts = [front0]
+    index = 0
+    while len(fronts[index]) != 0:
+        next_front = []
+        for p in fronts[index]:
+            for q in p["domination_set"]:
+                q["domination_count"] -= 1
+                if q["domination_count"] == 0:
+                    q["rank"] = index + 1
+                    # check for uniqueness
+                    unique = True
+                    for i in next_front:
+                        if json.dumps(i) == json.dumps(q):
+                            unique = False
+                    if unique:
+                        next_front.append(q)
+        index += 1
+        fronts.append(next_front)
+
+    return fronts
+
+# HELPER FUNCTION FOR SELECTION
+def dominates(p, q):
+    # Better solutions have a lower fitness value
+    if p["Fitness1"] >= q["Fitness1"] or p["Fitness2"] >= q["Fitness2"]:
+        return False
+    else:
+        return True
+
 
 # Use tkinter to display stock and pieces
 from tkinter import *
@@ -352,13 +481,22 @@ for looper in range(NUMBER_OF_GENERATIONS):
         if total_population[i]["Fitness1"] == None:
         	total_population[i]["Fitness1"] = fitness1(total_population[i]["Pieces"])
         	print(total_population[i]["Fitness1"])
-        # if total_population[i]["Fitness2"] == None:
-        #     total_population[i]["Fitness2"] = fitness2(total_population[i]["Pieces"])
-        # 	print(total_population[i]["Fitness2"])
+        if total_population[i]["Fitness2"] == None:
+            total_population[i]["Fitness2"] = fitness2(total_population[i]["Pieces"])
+        	print(total_population[i]["Fitness2"])
 
 
     # SELECT INDIVIDUALS FOR REPRODUCTION IN THE NEXT GENERATION
-
+    total_population = non_dominated_sort(total_population)
+    new_population = []
+    for i in range(len(total_population)):
+        for j in range(len(total_population[i])):
+            new_population.append(total_population[i][j])
+            if len(new_population) == POPULATION_SIZE:
+                break
+        if len(new_population) == POPULATION_SIZE:
+            break
+    population = new_population
 
 
     # Display all pieces in their new position.
