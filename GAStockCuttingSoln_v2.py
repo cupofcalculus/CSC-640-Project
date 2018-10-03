@@ -22,16 +22,18 @@ https://tkdocs.com/
 import time  # for pause during graphic display
 import random
 import sys
+import math
 import json
 #import tkFont  # http://infohost.nmt.edu/tcc/help/pubs/tkinter/web/fonts.html
 # random.seed(0)  # Initialize internal state of the random number generator.
 from datetime import datetime
+from operator import itemgetter
 random.seed(datetime.now())
 
 NUMBER_OF_PIECES = 6  # HARDCODED
 STOCK_WIDTH = 800 # HARDCODED  Width of stock
 STOCK_HEIGHT = 600 # HARDCODED  Height of stock =
-NUMBER_OF_GENERATIONS = 500 # HARDCODED Number of generations of evolution
+NUMBER_OF_GENERATIONS = 250 # HARDCODED Number of generations of evolution
 POPULATION_SIZE = 10  # HARDCODED Number of individuals in population
 
 piece_colors = ["gold", "deepskyblue", "green3", "tan1", "orchid1",
@@ -70,102 +72,32 @@ def fitness1(individual):
 	@return: the perimeter of the rectangle
 	'''
     # Initialize
-	max_x = individual[0]["x2"]
-	min_x = individual[0]["x1"]
-	max_y = individual[0]["y2"]
-	min_y = individual[0]["y1"]
+	fitness = 0
     # Check others
 	for i in range(len(individual)):
-		if individual[i]["x1"] < min_x:
-			min_x = individual[i]["x1"]
-		if individual[i]["x2"] > max_x:
-			max_x = individual[i]["x2"]
-		if individual[i]["y1"] < min_y:
-			min_y = individual[i]["y1"]
-		if individual[i]["y2"] > max_y:
-			max_y = individual[i]["y2"]
+		fitness += math.sqrt(individual[i]["x1"]**2 + individual[i]["y1"]**2)
     # Set Fitness1
-	return 2*(max_x - min_x) + 2*(max_y - min_y)
+	return fitness
 
 # Second fitness function which determines overlap sum of an individual by calculating
 # the overlap area of all shapes.
 def fitness2(individual):
-
-    #   # Individual has 6 shapes each.
-    #   # Overall fitness returned for an individual
-
-    indiv_set = {}
-
-    # Check if shape lengths overlap.
-    for shape1 in individual:
-        shape1_color = shape1['color']
-
-        # Shape1 Left & Right X point values
-        lengthS1 = [shape1['x1'], shape1['x2']]
-
-        for shape2 in individual:
-            shape2_color = shape2['color']
-
-            if shape1_color != shape2_color:
-
-                shape_pair = tuple(sorted((shape1_color, shape2_color)))
-
-                if shape_pair not in indiv_set:
-
-                    # Shape2 Left & Right X point values
-                    lengthS2 = [shape2['x1'], shape2['x2']]
-
-                    if (lengthS1[0] <= lengthS2[1] and lengthS2[1] <= lengthS1[1]) or (lengthS1[0] <= lengthS2[0] and lengthS2[0] <= lengthS1[1]):
-
-                        # Shape1 Top & Bottom y point values
-                        heightS1 = [shape1['y1'], shape1['y2']]
-                        # Shape2 Top & Bottom Y point values
-                        heightS2 = [shape2['y1'], shape2['y2']]
-
-                        if (heightS1[0] <= heightS2[1] and heightS2[1] <= heightS1[1]) or (heightS1[0] <= heightS2[0] and heightS2[0] <= heightS1[1]):
-
-                            #If two shapes overlap, continue
-                            overlap_area = 0
-
-
-                            # If second shape is located higher & Right than initial shape.
-                            # If second shape is Right & exactly above.
-                            if (heightS2[0] <= heightS1[0] and lengthS2[0] > lengthS1[0]):
-                                length_overlap = lengthS1[1] - lengthS2[0]
-                                height_overlap = heightS2[1] - heightS1[0]
-                                overlap_area = height_overlap * length_overlap
-
-                            # If second shape is located higher & Left than initial shape.
-                            # If second shape is just higher & above
-                            # If second shape is just Left & above
-                            elif (heightS2[0] <= heightS1[0] and lengthS2[0] <= lengthS1[0]):
-                                length_overlap = lengthS2[1] - lengthS1[0]
-                                height_overlap = heightS2[1] - heightS1[0]
-                                overlap_area = height_overlap * length_overlap
-
-                            # If the second shape is located Lower & Left than initial shape.
-                            # If second shape is just lower & above
-                            elif (heightS2[0] > heightS1[0] and lengthS2[0] <= lengthS1[0]):
-                                length_overlap = lengthS2[1] - lengthS1[0]
-                                height_overlap = heightS1[1] - heightS2[0]
-                                overlap_area = height_overlap * length_overlap
-
-                            # If the second shape is located Lower & Right than initial shape.
-                            elif (heightS2[0] > heightS1[0] and lengthS2[0] > lengthS1[0]):
-                                length_overlap = lengthS1[1] - lengthS2[0]
-                                height_overlap = heightS1[1] - heightS2[0]
-                                overlap_area = height_overlap * length_overlap
-
-                            # Add (shape pair) & its area to dictionary
-                            indiv_set[shape_pair] = overlap_area
-
     total_overlap = 0
-    for key in indiv_set:
-        overlap = indiv_set[key]
-        total_overlap += overlap
-    # print (total_overlap)
+    for i in range(len(individual)):
+        piece = individual[i]
+        for j in range(i+1, len(individual)):
+            total_overlap += piece_overlap(piece, individual[j])
     return total_overlap
 
+def piece_overlap(p1, p2):
+    return max(0, min(p1["x2"], p2["x2"]) - max(p1["x1"], p2["x1"])) * max(0, min(p1["y2"], p2["y2"]) - max(p1["y1"], p2["y1"]))
+
+
+def copyPieces(original):
+    copy = []
+    for i in range(len(original)):
+        copy.append(copy_piece(original[i]))
+    return copy
 
 '''
 Create a Piece object in a dictionary data structure, using the parameters
@@ -264,6 +196,18 @@ def dominates(p, q):
     else:
         return True
 
+def sort_population(population):
+    sorted_list = []
+    for i in range(len(population)):
+        insert_index = 0
+        for j in range(len(sorted_list)):
+            if population[i]["Fitness2"] > sorted_list[j]["Fitness2"]:
+                insert_index += 1
+            elif population[i]["Fitness2"] == sorted_list[j]["Fitness2"] and population[i]["Fitness1"] > sorted_list[j]["Fitness1"]:
+                insert_index += 1
+        sorted_list.insert(insert_index, population[i])
+
+    return sorted_list
 
 # Use tkinter to display stock and pieces
 from tkinter import *
@@ -462,19 +406,22 @@ def create_mutated_copies(original_population, generation_num):
                 copy["Pieces"][indx2]["y1"] = y1
                 copy["Pieces"][indx2]["y2"] = y1 + copy["Pieces"][indx2]["height"]
         # Moving Mutation
+        chance_to_move = 1.0 * mutation_rate
         max_move_dist_x = STOCK_WIDTH * mutation_rate / 2
         max_move_dist_y = STOCK_HEIGHT * mutation_rate / 2
         for indx in range(len(copy["Pieces"])):
-            # Grab random individual
-            x_move = random.uniform(-max_move_dist_x, max_move_dist_x)
-            y_move = random.uniform(-max_move_dist_y, max_move_dist_y)
-            new_x = copy["Pieces"][indx]["x1"] + x_move
-            new_y = copy["Pieces"][indx]["y1"] + y_move
-            if in_bounds_move(copy["Pieces"][indx], new_x, new_y):
-                copy["Pieces"][indx]["x1"] += x_move
-                copy["Pieces"][indx]["x2"] += x_move
-                copy["Pieces"][indx]["y1"] += y_move
-                copy["Pieces"][indx]["y2"] += y_move
+            randNum = random.uniform(0.0, 1.0)
+            if randNum < chance_to_move:
+                # Grab random individual
+                x_move = random.uniform(-max_move_dist_x, max_move_dist_x)
+                y_move = random.uniform(-max_move_dist_y, max_move_dist_y)
+                new_x = copy["Pieces"][indx]["x1"] + x_move
+                new_y = copy["Pieces"][indx]["y1"] + y_move
+                if in_bounds_move(copy["Pieces"][indx], new_x, new_y):
+                    copy["Pieces"][indx]["x1"] += x_move
+                    copy["Pieces"][indx]["x2"] += x_move
+                    copy["Pieces"][indx]["y1"] += y_move
+                    copy["Pieces"][indx]["y2"] += y_move
         # Rotating Mutation
         chance_of_rotation = .5 * mutation_rate
         for indx in range(len(copy["Pieces"])):
@@ -529,18 +476,28 @@ for looper in range(NUMBER_OF_GENERATIONS):
 
 
     # SELECT INDIVIDUALS FOR REPRODUCTION IN THE NEXT GENERATION
-    sorted_population = non_dominated_sort(total_population)
+    sorted_population = sort_population(total_population)
     new_population = []
-    for i in range(len(sorted_population)):
-        for j in range(len(sorted_population[i])):
-            new_population.append(full_copy_individual(sorted_population[i][j]))
-            if len(new_population) == POPULATION_SIZE:
-                break
-        if len(new_population) == POPULATION_SIZE:
-            break
+    # for i in range(len(sorted_population)):
+    #     for j in range(len(sorted_population[i])):
+    #         new_population.append(full_copy_individual(sorted_population[i][j]))
+    #         if len(new_population) == POPULATION_SIZE:
+    #             break
+    #     if len(new_population) == POPULATION_SIZE:
+    #         break
+    for i in range(POPULATION_SIZE):
+        new_population.append(sorted_population[i])
+
     population = new_population
+    for i in population:
+        print("Fitness2:", i["Fitness2"])
+        print("Fitness1:", i["Fitness1"])
+        print()
 
     # Print highest fitness
+    print("Total Population:", str(len(total_population)))
+    print("Sorted Population:", str(len(sorted_population)))
+    print("New Population:", len(new_population))
     print("Generation " + str(looper))
     print("Fitness 1: " + str(population[0]["Fitness1"]))
     print("Fitness 2: " + str(population[0]["Fitness2"]))
