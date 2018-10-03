@@ -22,6 +22,7 @@ https://tkdocs.com/
 import time  # for pause during graphic display
 import random
 import sys
+import math
 import json
 #import tkFont  # http://infohost.nmt.edu/tcc/help/pubs/tkinter/web/fonts.html
 # random.seed(0)  # Initialize internal state of the random number generator.
@@ -32,7 +33,7 @@ random.seed(datetime.now())
 NUMBER_OF_PIECES = 6  # HARDCODED
 STOCK_WIDTH = 800 # HARDCODED  Width of stock
 STOCK_HEIGHT = 600 # HARDCODED  Height of stock =
-NUMBER_OF_GENERATIONS = 200 # HARDCODED Number of generations of evolution
+NUMBER_OF_GENERATIONS = 250 # HARDCODED Number of generations of evolution
 POPULATION_SIZE = 10  # HARDCODED Number of individuals in population
 
 piece_colors = ["gold", "deepskyblue", "green3", "tan1", "orchid1",
@@ -71,22 +72,12 @@ def fitness1(individual):
 	@return: the perimeter of the rectangle
 	'''
     # Initialize
-	max_x = individual[0]["x2"]
-	min_x = individual[0]["x1"]
-	max_y = individual[0]["y2"]
-	min_y = individual[0]["y1"]
+	fitness = 0
     # Check others
 	for i in range(len(individual)):
-		if individual[i]["x1"] < min_x:
-			min_x = individual[i]["x1"]
-		if individual[i]["x2"] > max_x:
-			max_x = individual[i]["x2"]
-		if individual[i]["y1"] < min_y:
-			min_y = individual[i]["y1"]
-		if individual[i]["y2"] > max_y:
-			max_y = individual[i]["y2"]
+		fitness += math.sqrt(individual[i]["x1"]**2 + individual[i]["y1"]**2)
     # Set Fitness1
-	return 2*(max_x - min_x) + 2*(max_y - min_y)
+	return fitness
 
 # Second fitness function which determines overlap sum of an individual by calculating
 # the overlap area of all shapes.
